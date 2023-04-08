@@ -86,3 +86,16 @@ CREATE OR ALTER PROC Alterar_Classificacao @Time VARCHAR(50), @Gols INT, @Gols_S
         UPDATE [Classificacao] SET [Pontuacao] = [Pontuacao] + @Pontuacao WHERE [Nome_Time] = @Time
     END
 GO
+
+CREATE OR ALTER PROC Criar_Time @Nome VARCHAR(50), @Apelido VARCHAR(30), @Data_Criacao DATETIME AS
+    BEGIN
+        INSERT INTO [Time] ([Nome], [Apelido], [Data_Criacao]) VALUES (@Nome, @Apelido, @Data_Criacao)
+    END
+GO
+
+-- Inserts
+EXEC.Criar_Time 'Galaticos', 'GL', '2023'
+
+-- Visualizacao
+SELECT * FROM [Time]
+SELECT * FROM [Classificacao]
