@@ -40,6 +40,16 @@ CREATE TABLE [Partida] (
 GO
 
 -- Triggers
+CREATE TRIGGER TGR_Insercao_Time ON [Time] AFTER INSERT AS
+    BEGIN
+        DECLARE @Time VARCHAR(50)
+
+        SELECT @Time = [Nome] FROM INSERTED
+
+        INSERT INTO [Classificacao] ([Nome_Time]) VALUES (@Time)
+    END
+GO
+
 CREATE TRIGGER TGR_Partida_Insert ON [Partida] AFTER INSERT AS 
     BEGIN
         DECLARE @Casa VARCHAR(50), @Visitante VARCHAR(50), @Gols_Casa INT, @Gols_Visitante INT
