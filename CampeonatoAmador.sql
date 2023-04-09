@@ -93,9 +93,45 @@ CREATE OR ALTER PROC Criar_Time @Nome VARCHAR(50), @Apelido VARCHAR(30), @Data_C
     END
 GO
 
+CREATE OR ALTER PROC Criar_Partida @Casa VARCHAR(50), @Visitante VARCHAR(50), @Gols INT, @Gols_Sofridos INT AS
+    BEGIN
+        INSERT INTO [Partida] ([Time_Casa], [Time_Visitante], [Gols], [Gols_Sofridos]) VALUES (@Casa, @Visitante, @Gols, @Gols_Sofridos)
+    END
+GO
+
 -- Inserts
 EXEC.Criar_Time 'Galaticos', 'GL', '2023'
+EXEC.Criar_Time 'Bunda Moles', 'Bundoes', '1990'
+EXEC.Criar_Time 'Mafia Japonesa', 'Yakuza', '1903'
+EXEC.Criar_Time 'Palmeiras', 'Mundial', '1914'
+EXEC.Criar_Time 'Lorem Ipsum', 'Lorem', '1900'
+
+EXEC.Criar_Partida 'Galaticos', 'Bunda Moles', 1, 1
+EXEC.Criar_Partida 'Galaticos', 'Mafia Japonesa', 0, 10
+EXEC.Criar_Partida 'Galaticos', 'Palmeiras', 20, 2
+EXEC.Criar_Partida 'Galaticos', 'Lorem Ipsum', 1, 5
+
+EXEC.Criar_Partida 'Bunda Moles', 'Galaticos', 10, 20
+EXEC.Criar_Partida 'Bunda Moles', 'Mafia Japonesa', 2, 30
+EXEC.Criar_Partida 'Bunda Moles', 'Palmeiras', 6, 3
+EXEC.Criar_Partida 'Bunda Moles', 'Lorem Ipsum', 1, 1
+
+EXEC.Criar_Partida 'Mafia Japonesa', 'Galaticos', 2, 0
+EXEC.Criar_Partida 'Mafia Japonesa', 'Bunda Moles', 8, 8
+EXEC.Criar_Partida 'Mafia Japonesa', 'Palmeiras', 2, 0
+EXEC.Criar_Partida 'Mafia Japonesa', 'Lorem Ipsum', 4, 4
+
+EXEC.Criar_Partida 'Palmeiras', 'Galaticos', 2, 1
+EXEC.Criar_Partida 'Palmeiras', 'Bunda Moles', 8, 2
+EXEC.Criar_Partida 'Palmeiras', 'Mafia Japonesa', 2, 4
+EXEC.Criar_Partida 'Palmeiras', 'Lorem Ipsum', 2, 2
+
+EXEC.Criar_Partida 'Lorem Ipsum', 'Galaticos', 1, 1
+EXEC.Criar_Partida 'Lorem Ipsum', 'Bunda Moles', 2, 2
+EXEC.Criar_Partida 'Lorem Ipsum', 'Mafia Japonesa', 3, 4
+EXEC.Criar_Partida 'Lorem Ipsum', 'Palmeiras', 1, 1
 
 -- Visualizacao
 SELECT * FROM [Time]
 SELECT * FROM [Classificacao]
+SELECT * FROM [Partida]
