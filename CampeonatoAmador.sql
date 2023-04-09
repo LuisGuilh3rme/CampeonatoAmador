@@ -7,7 +7,7 @@ GO
 CREATE TABLE [Time] (
     [Nome] VARCHAR(50) NOT NULL,
     [Apelido] VARCHAR(30) NOT NULL,
-    [Data_Criacao] DATETIME NOT NULL,
+    [Data_Criacao] CHAR(4) NOT NULL,
 
     CONSTRAINT PK_Time PRIMARY KEY ([Nome])
 )
@@ -88,7 +88,7 @@ CREATE OR ALTER PROC Alterar_Classificacao @Time VARCHAR(50), @Gols INT, @Gols_S
     END
 GO
 
-CREATE OR ALTER PROC Criar_Time @Nome VARCHAR(50), @Apelido VARCHAR(30), @Data_Criacao DATETIME AS
+CREATE OR ALTER PROC Criar_Time @Nome VARCHAR(50), @Apelido VARCHAR(30), @Data_Criacao char(4) AS
     BEGIN
         INSERT INTO [Time] ([Nome], [Apelido], [Data_Criacao]) VALUES (@Nome, @Apelido, @Data_Criacao)
     END
@@ -115,6 +115,7 @@ EXEC.Criar_Time 'Bunda Moles', 'Bundoes', '1990'
 EXEC.Criar_Time 'Mafia Japonesa', 'Yakuza', '1903'
 EXEC.Criar_Time 'Palmeiras', 'Mundial', '1914'
 EXEC.Criar_Time 'Lorem Ipsum', 'Lorem', '1900'
+GO
 
 EXEC.Criar_Partida 'Galaticos', 'Bunda Moles', 1, 1
 EXEC.Criar_Partida 'Galaticos', 'Mafia Japonesa', 0, 10
@@ -140,6 +141,7 @@ EXEC.Criar_Partida 'Lorem Ipsum', 'Galaticos', 1, 1
 EXEC.Criar_Partida 'Lorem Ipsum', 'Bunda Moles', 2, 2
 EXEC.Criar_Partida 'Lorem Ipsum', 'Mafia Japonesa', 3, 4
 EXEC.Criar_Partida 'Lorem Ipsum', 'Palmeiras', 1, 1
+GO
 
 -- Visualizacao
 SELECT * FROM [Time]
