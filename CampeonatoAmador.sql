@@ -28,6 +28,7 @@ CREATE TABLE [Classificacao] (
 GO
 
 CREATE TABLE [Partida] (
+    [Numero_Partida] INT IDENTITY,
     [Time_Casa] VARCHAR(50) NOT NULL,
     [Time_Visitante] VARCHAR(50) NOT NULL,
     [Gols] INT NOT NULL,
@@ -99,6 +100,15 @@ CREATE OR ALTER PROC Criar_Partida @Casa VARCHAR(50), @Visitante VARCHAR(50), @G
     END
 GO
 
+/*
+CREATE OR ALTER PROC Partida_Maior_Gols_Times AS
+    BEGIN
+        SELECT [Time_Casa] AS 'Time', MAX(Gols) FROM [Partida] GROUP BY [Time_Casa]
+        SELECT [Time_Visitante], MAX(Gols_Sofridos) FROM [Partida] GROUP BY [Time_Visitante]
+    END
+GO
+*/
+
 -- Inserts
 EXEC.Criar_Time 'Galaticos', 'GL', '2023'
 EXEC.Criar_Time 'Bunda Moles', 'Bundoes', '1990'
@@ -133,5 +143,24 @@ EXEC.Criar_Partida 'Lorem Ipsum', 'Palmeiras', 1, 1
 
 -- Visualizacao
 SELECT * FROM [Time]
-SELECT * FROM [Classificacao]
+SELECT * FROM [Classificacao] ORDER BY [Pontuacao] DESC
 SELECT * FROM [Partida]
+
+-- Quem é o campeão no final do campeonato?
+SELECT TOP 1 * FROM [Classificacao] ORDER BY [Pontuacao] DESC
+
+-- Como faremos para verificar os 5 primeiros times do campeonato?
+SELECT TOP 5 * FROM [Classificacao] ORDER BY [Pontuacao] DESC
+SELECT TOP 5 * FROM [Partida] ORDER BY [Numero_Partida] ASC
+
+-- Quem é o time que mais fez gols no campeonato?
+SELECT TOP 1 [Nome_Time], Total_Gols AS 'Gols' FROM [Classificacao] ORDER BY [Total_Gols] DESC
+
+-- Quem é que tomou mais gols no campeonato?
+SELECT TOP 1 [Nome_Time], Total_Gols_Sofridos AS 'Gols Sofridos' FROM [Classificacao] ORDER BY [Total_Gols_Sofridos] DESC
+
+-- Qual é o jogo que teve mais gols?
+SELECT TOP 1 Numero_Partida, Time_Casa, Time_Visitante, MAX(Gols + Gols_Sofridos) AS 'Total Gols' FROM [Partida] GROUP BY Numero_Partida, Time_Casa, Time_Visitante ORDER BY 4 DESC
+
+-- Qual é o maior número de gols que cada time fez em um único jogo?
+--EXEC.Partida_Maior_Gols_Times
