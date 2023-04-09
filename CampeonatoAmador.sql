@@ -100,14 +100,20 @@ CREATE OR ALTER PROC Criar_Partida @Casa VARCHAR(50), @Visitante VARCHAR(50), @G
     END
 GO
 
-/*
+
 CREATE OR ALTER PROC Partida_Maior_Gols_Times AS
     BEGIN
-        SELECT [Time_Casa] AS 'Time', MAX(Gols) FROM [Partida] GROUP BY [Time_Casa]
-        SELECT [Time_Visitante], MAX(Gols_Sofridos) FROM [Partida] GROUP BY [Time_Visitante]
+        WITH Max_Gols_Visitantes AS (
+            SELECT [Time_Visitante] AS 'Time', MAX([Gols_Sofridos]) AS 'Gols' FROM [Partida] GROUP BY [Time_Visitante]
+        ), Max_Gols_Casa AS
+        (
+            SELECT [Time_Casa] AS 'Time', MAX(Gols) AS 'Gols' FROM [Partida] GROUP BY [Time_Casa]
+        ), Max_Gols_Duplicados AS (
+            SELECT * FROM Max_Gols_Casa UNION ALL SELECT * FROM Max_Gols_Visitantes
+        ) SELECT [Time], MAX([Gols]) AS 'Máximo de Gols' FROM Max_Gols_Duplicados GROUP BY [Time] ORDER BY 'Máximo de Gols' DESC
     END
 GO
-*/
+
 
 -- Inserts
 EXEC.Criar_Time 'Galaticos', 'GL', '2023'
@@ -146,8 +152,8 @@ GO
 -- Visualizacao
 SELECT * FROM [Time]
 SELECT * FROM [Classificacao] ORDER BY [Pontuacao] DESC
-SELECT * FROM [Partida]
-
+SELECT * FROM [Partida] ORDER BY [Numero_Partida] ASC
+ 
 -- Quem é o campeão no final do campeonato?
 SELECT TOP 1 * FROM [Classificacao] ORDER BY [Pontuacao] DESC
 
@@ -165,4 +171,4 @@ SELECT TOP 1 [Nome_Time], Total_Gols_Sofridos AS 'Gols Sofridos' FROM [Classific
 SELECT TOP 1 Numero_Partida, Time_Casa, Time_Visitante, MAX(Gols + Gols_Sofridos) AS 'Total Gols' FROM [Partida] GROUP BY Numero_Partida, Time_Casa, Time_Visitante ORDER BY 4 DESC
 
 -- Qual é o maior número de gols que cada time fez em um único jogo?
---EXEC.Partida_Maior_Gols_Times
+EXEC.Partida_Maior_Gols_Times
