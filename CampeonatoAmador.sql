@@ -39,6 +39,7 @@ CREATE TABLE [Partida] (
     CONSTRAINT FK_Partida_Time_Visitante FOREIGN KEY ([Time_Visitante]) REFERENCES [Time]([Nome])
 )
 GO
+
 -- Triggers
 CREATE TRIGGER TGR_Insercao_Time ON [Time] AFTER INSERT AS
     BEGIN
@@ -155,6 +156,19 @@ CREATE OR ALTER PROC Partida_Maior_Gols_Times AS
     END
 GO
 
+CREATE OR ALTER PROC Verificar_Campeao AS
+    BEGIN
+        DECLARE @Pontuacao INT, @Vitorias INT, @Saldo_Gols INT
+
+        SELECT @Pontuacao = MAX([Pontuacao]) FROM [Classificacao]
+        -- SELECT * FROM [Classificacao] WHERE [Pontuacao] = @Pontuacao
+        SELECT @Vitorias = MAX([Vitorias]) FROM [Classificacao] WHERE [Pontuacao] = @Pontuacao
+        -- SELECT * FROM [Classificacao] WHERE [Pontuacao] = @Pontuacao AND [Vitorias] = @Vitorias
+        SELECT @Saldo_Gols = MAX([Saldo_Gols]) FROM [Classificacao] WHERE [Vitorias] = @Vitorias
+
+        SELECT TOP 1 * FROM [Classificacao] WHERE [Pontuacao] = @Pontuacao AND [Vitorias] = @Vitorias AND [Saldo_Gols] = @Saldo_Gols
+    END
+GO
 
 -- Inserts
 EXEC.Criar_Time 'Galaticos', 'GL', '2023'
@@ -164,25 +178,25 @@ EXEC.Criar_Time 'Palmeiras', 'Mundial', '1914'
 EXEC.Criar_Time 'Lorem Ipsum', 'Lorem', '1900'
 GO
 
-EXEC.Criar_Partida 'Galaticos', 'Bunda Moles', 1, 1
-EXEC.Criar_Partida 'Galaticos', 'Mafia Japonesa', 0, 10
-EXEC.Criar_Partida 'Galaticos', 'Palmeiras', 20, 2
-EXEC.Criar_Partida 'Galaticos', 'Lorem Ipsum', 1, 5
+EXEC.Criar_Partida 'Galaticos', 'Bunda Moles', 1, 0
+EXEC.Criar_Partida 'Galaticos', 'Mafia Japonesa', 1, 0
+EXEC.Criar_Partida 'Galaticos', 'Palmeiras', 2, 0
+EXEC.Criar_Partida 'Galaticos', 'Lorem Ipsum', 1, 0
 
-EXEC.Criar_Partida 'Bunda Moles', 'Galaticos', 10, 20
-EXEC.Criar_Partida 'Bunda Moles', 'Mafia Japonesa', 2, 30
-EXEC.Criar_Partida 'Bunda Moles', 'Palmeiras', 6, 3
-EXEC.Criar_Partida 'Bunda Moles', 'Lorem Ipsum', 1, 1
+EXEC.Criar_Partida 'Bunda Moles', 'Galaticos', 1, 0
+EXEC.Criar_Partida 'Bunda Moles', 'Mafia Japonesa', 1, 0
+EXEC.Criar_Partida 'Bunda Moles', 'Palmeiras', 1, 0
+EXEC.Criar_Partida 'Bunda Moles', 'Lorem Ipsum', 1, 0
 
-EXEC.Criar_Partida 'Mafia Japonesa', 'Galaticos', 2, 0
-EXEC.Criar_Partida 'Mafia Japonesa', 'Bunda Moles', 8, 8
-EXEC.Criar_Partida 'Mafia Japonesa', 'Palmeiras', 2, 0
-EXEC.Criar_Partida 'Mafia Japonesa', 'Lorem Ipsum', 4, 4
+EXEC.Criar_Partida 'Mafia Japonesa', 'Galaticos', 1, 0
+EXEC.Criar_Partida 'Mafia Japonesa', 'Bunda Moles', 1, 0
+EXEC.Criar_Partida 'Mafia Japonesa', 'Palmeiras', 1, 0
+EXEC.Criar_Partida 'Mafia Japonesa', 'Lorem Ipsum', 1, 0
 
-EXEC.Criar_Partida 'Palmeiras', 'Galaticos', 2, 1
-EXEC.Criar_Partida 'Palmeiras', 'Bunda Moles', 8, 2
-EXEC.Criar_Partida 'Palmeiras', 'Mafia Japonesa', 2, 4
-EXEC.Criar_Partida 'Palmeiras', 'Lorem Ipsum', 2, 2
+EXEC.Criar_Partida 'Palmeiras', 'Galaticos', 0, 1
+EXEC.Criar_Partida 'Palmeiras', 'Bunda Moles', 1, 0
+EXEC.Criar_Partida 'Palmeiras', 'Mafia Japonesa', 1, 0
+EXEC.Criar_Partida 'Palmeiras', 'Lorem Ipsum', 1, 0
 
 EXEC.Criar_Partida 'Lorem Ipsum', 'Galaticos', 1, 1
 EXEC.Criar_Partida 'Lorem Ipsum', 'Bunda Moles', 2, 2
@@ -194,9 +208,10 @@ GO
 SELECT * FROM [Time]
 SELECT * FROM [Classificacao] ORDER BY [Pontuacao] DESC
 SELECT * FROM [Partida] ORDER BY [Numero_Partida] ASC
+DELETE FROM [Partida]
 
 -- Quem é o campeão no final do campeonato?
-SELECT TOP 1 * FROM [Classificacao] ORDER BY [Pontuacao] DESC
+EXEC.Verificar_Campeao
 
 -- Como faremos para verificar os 5 primeiros times do campeonato?
 SELECT TOP 5 * FROM [Classificacao] ORDER BY [Pontuacao] DESC
