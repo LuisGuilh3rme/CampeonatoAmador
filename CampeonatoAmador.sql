@@ -7,7 +7,7 @@ GO
 CREATE TABLE [Time] (
     [Nome] VARCHAR(50) NOT NULL,
     [Apelido] VARCHAR(30) NOT NULL,
-    [Data_Criacao] CHAR(4) NOT NULL,
+    [Data_Criacao] CHAR(10) NOT NULL,
 
     CONSTRAINT PK_Time PRIMARY KEY ([Nome])
 )
@@ -39,7 +39,6 @@ CREATE TABLE [Partida] (
     CONSTRAINT FK_Partida_Time_Visitante FOREIGN KEY ([Time_Visitante]) REFERENCES [Time]([Nome])
 )
 GO
-
 -- Triggers
 CREATE TRIGGER TGR_Insercao_Time ON [Time] AFTER INSERT AS
     BEGIN
@@ -51,44 +50,74 @@ CREATE TRIGGER TGR_Insercao_Time ON [Time] AFTER INSERT AS
     END
 GO
 
-CREATE TRIGGER TGR_Partida_Insert ON [Partida] AFTER INSERT AS 
+CREATE OR ALTER TRIGGER TGR_Partida_Insert ON [Partida] AFTER INSERT AS 
     BEGIN
+    
         DECLARE @Casa VARCHAR(50), @Visitante VARCHAR(50), @Gols_Casa INT, @Gols_Visitante INT
 
         SELECT @Casa = [Time_Casa], @Visitante = [Time_Visitante], @Gols_Casa = [Gols], @Gols_Visitante = [Gols_Sofridos] FROM INSERTED
 
-        EXEC.Alterar_Classificacao @Casa, @Gols_Casa, @Gols_Visitante, 'Casa'
-        EXEC.Alterar_Classificacao @Visitante, @Gols_Visitante, @Gols_Casa, 'Visitante'
+        EXEC.Alterar_Classificacao @Casa, @Gols_Casa, @Gols_Visitante, 'Casa', 'Inserir'
+        EXEC.Alterar_Classificacao @Visitante, @Gols_Visitante, @Gols_Casa, 'Visitante', 'Inserir'
+    END
+GO
+
+CREATE OR ALTER TRIGGER TGR_Partida_Delete ON [Partida] AFTER DELETE AS 
+    BEGIN
+        DECLARE @Casa VARCHAR(50), @Visitante VARCHAR(50), @Gols_Casa INT, @Gols_Visitante INT
+
+        SELECT @Casa = [Time_Casa], @Visitante = [Time_Visitante], @Gols_Casa = [Gols] * -1, @Gols_Visitante = [Gols_Sofridos] * -1 FROM DELETED
+        
+        IF ((SELECT COUNT(*) FROM [Partida]) = 0) EXEC.Zerar_Classificacao
+
+        ELSE
+            BEGIN
+                EXEC.Alterar_Classificacao @Casa, @Gols_Casa, @Gols_Visitante, 'Casa', 'Remover'
+                EXEC.Alterar_Classificacao @Visitante, @Gols_Visitante, @Gols_Casa, 'Visitante', 'Remover'
+            END
     END
 GO
 
 -- Procedures
-CREATE OR ALTER PROC Alterar_Classificacao @Time VARCHAR(50), @Gols INT, @Gols_Sofridos INT, @Lado VARCHAR(9) AS
+CREATE OR ALTER PROC Alterar_Classificacao @Time VARCHAR(50), @Gols INT, @Gols_Sofridos INT, @Lado VARCHAR(9), @Situacao CHAR(7) AS
     BEGIN
-        DECLARE @Pontuacao INT
+        DECLARE @Pontuacao INT, @Saldo_Gols INT
 
+        SET @Saldo_Gols = @Gols - @Gols_Sofridos
+        
         -- Contabilizando gols
-        UPDATE [Classificacao] SET [Total_Gols] = [Total_Gols] + @Gols, [Total_Gols_Sofridos] = [Total_Gols_Sofridos] + @Gols_Sofridos, [Saldo_Gols] = [Saldo_Gols] + (@Gols - @Gols_Sofridos) WHERE [Nome_Time] = @Time
+        UPDATE [Classificacao] SET [Total_Gols] = [Total_Gols] + @Gols, [Total_Gols_Sofridos] = [Total_Gols_Sofridos] + @Gols_Sofridos, [Saldo_Gols] = [Saldo_Gols] + @Saldo_Gols WHERE [Nome_Time] = @Time
 
         -- Verificando empate ou vitoria
-        IF (@Gols > @Gols_Sofridos)
+        IF (@Gols > @Gols_Sofridos AND @Situacao = 'Inserir')
             UPDATE [Classificacao] SET [Vitorias] = [Vitorias] + 1 WHERE [Nome_Time] = @Time
-        IF (@Gols = @Gols_Sofridos)
+        ELSE IF (@Gols = @Gols_Sofridos AND @Situacao = 'Inserir')
             UPDATE [Classificacao] SET [Empates] = [Empates] + 1 WHERE [Nome_Time] = @Time
 
+        ELSE IF (@Gols < @Gols_Sofridos AND @Situacao = 'Remover')
+            UPDATE [Classificacao] SET [Vitorias] = [Vitorias] - 1 WHERE [Nome_Time] = @Time
+        ELSE IF (@Gols = @Gols_Sofridos AND @Situacao = 'Remover')
+            UPDATE [Classificacao] SET [Empates] = [Empates] - 1 WHERE [Nome_Time] = @Time
+
         -- Calculando Pontuacao
-        SET @Pontuacao = CASE 
-            WHEN @Gols = @Gols_Sofridos THEN 1
+        SET @Pontuacao = CASE
+            WHEN @Saldo_Gols = 0 THEN 1
             WHEN @Gols > @Gols_Sofridos AND @Lado = 'Casa' THEN 3
             WHEN @Gols > @Gols_Sofridos AND @Lado = 'Visitante' THEN 5
             ELSE 0
         END
 
+        IF (@Situacao = 'Remover') SET @Pontuacao = CASE
+            WHEN @Gols < @Gols_Sofridos AND @Lado = 'Casa' THEN -3
+            WHEN @Gols < @Gols_Sofridos AND @Lado = 'Visitante' THEN -5
+            ELSE @Pontuacao * -1
+        END  
+
         UPDATE [Classificacao] SET [Pontuacao] = [Pontuacao] + @Pontuacao WHERE [Nome_Time] = @Time
     END
 GO
 
-CREATE OR ALTER PROC Criar_Time @Nome VARCHAR(50), @Apelido VARCHAR(30), @Data_Criacao char(4) AS
+CREATE OR ALTER PROC Criar_Time @Nome VARCHAR(50), @Apelido VARCHAR(30), @Data_Criacao char(10) AS
     BEGIN
         INSERT INTO [Time] ([Nome], [Apelido], [Data_Criacao]) VALUES (@Nome, @Apelido, @Data_Criacao)
     END
@@ -96,7 +125,19 @@ GO
 
 CREATE OR ALTER PROC Criar_Partida @Casa VARCHAR(50), @Visitante VARCHAR(50), @Gols INT, @Gols_Sofridos INT AS
     BEGIN
-        INSERT INTO [Partida] ([Time_Casa], [Time_Visitante], [Gols], [Gols_Sofridos]) VALUES (@Casa, @Visitante, @Gols, @Gols_Sofridos)
+    DECLARE @Count INT
+    SET @Count = (SELECT COUNT(*) FROM [Partida]) + 1
+
+    SET IDENTITY_INSERT [Partida] ON
+    INSERT INTO [Partida] ([Numero_Partida], [Time_Casa], [Time_Visitante], [Gols], [Gols_Sofridos]) VALUES (@Count, @Casa, @Visitante, @Gols, @Gols_Sofridos)
+    SET IDENTITY_INSERT [Partida] OFF
+
+    END
+GO
+
+CREATE OR ALTER PROC Zerar_Classificacao AS
+    BEGIN
+        UPDATE [Classificacao] SET [Pontuacao] = 0, [Total_Gols] = 0, [Total_Gols_Sofridos] = 0, [Saldo_Gols] = 0, [Vitorias] = 0, [Empates] = 0
     END
 GO
 
@@ -153,7 +194,7 @@ GO
 SELECT * FROM [Time]
 SELECT * FROM [Classificacao] ORDER BY [Pontuacao] DESC
 SELECT * FROM [Partida] ORDER BY [Numero_Partida] ASC
- 
+
 -- Quem é o campeão no final do campeonato?
 SELECT TOP 1 * FROM [Classificacao] ORDER BY [Pontuacao] DESC
 
