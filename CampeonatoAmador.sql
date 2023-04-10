@@ -164,7 +164,8 @@ CREATE OR ALTER PROC Verificar_Campeao AS
         -- SELECT * FROM [Classificacao] WHERE [Pontuacao] = @Pontuacao
         SELECT @Vitorias = MAX([Vitorias]) FROM [Classificacao] WHERE [Pontuacao] = @Pontuacao
         -- SELECT * FROM [Classificacao] WHERE [Pontuacao] = @Pontuacao AND [Vitorias] = @Vitorias
-        SELECT @Saldo_Gols = MAX([Saldo_Gols]) FROM [Classificacao] WHERE [Vitorias] = @Vitorias
+        SELECT @Saldo_Gols = MAX([Saldo_Gols]) FROM [Classificacao] WHERE [Vitorias] = @Vitorias AND [Pontuacao] = @Pontuacao
+
 
         SELECT TOP 1 * FROM [Classificacao] WHERE [Pontuacao] = @Pontuacao AND [Vitorias] = @Vitorias AND [Saldo_Gols] = @Saldo_Gols
     END
